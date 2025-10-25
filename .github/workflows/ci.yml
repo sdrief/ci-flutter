@@ -34,7 +34,7 @@ jobs:
           api-level: 30
           target: default
           arch: x86_64
-          profile: pixel_6
+          profile: pixel_7_pro
           force-avd-creation: true
           disk-size: 6G
           ram-size: 2048M
@@ -53,9 +53,9 @@ jobs:
             adb shell pidof com.example.flutter_ci_demo || exit 1
             adb shell am force-stop com.example.flutter_ci_demo
             flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
-      - name: Show emulator logcat
-        if: always()
-        run: adb logcat -d | tail -n 100
+#      - name: Show emulator logcat
+#        if: always()
+#        run: adb logcat -d | tail -n 100
       - name: Debug logs if failed
         if: failure()
         run: adb logcat -d | grep -E "Flutter|example|Activity|Runtime" | tail -n 200 || true
