@@ -15,6 +15,16 @@ jobs:
         with:
           flutter-version: '3.35.5'
 
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -29,8 +39,23 @@ jobs:
           disk-size: 6G
           ram-size: 2048M
           disable-animations: true
-          emulator-options: -no-snapshot -no-window -gpu off -noaudio -no-boot-anim
-          script: flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            flutter build apk --debug
+            adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
+          
+            echo "🔍 Checking if app is installed..."
+            adb shell pm list packages | grep com.example.flutter_ci_demo
+          
+            echo "🚀 Sanity check launch"
+            adb shell am start -n com.example.flutter_ci_demo/.MainActivity
+            sleep 5
+            adb shell pidof com.example.flutter_ci_demo || exit 1
+            adb shell am force-stop com.example.flutter_ci_demo
+            flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
       - name: Show emulator logcat
         if: always()
         run: adb logcat -d | tail -n 100
+      - name: Debug logs if failed
+        if: failure()
+        run: adb logcat -d | grep -E "Flutter|example|Activity|Runtime" | tail -n 200 || true
