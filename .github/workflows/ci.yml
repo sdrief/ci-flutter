@@ -29,7 +29,8 @@ jobs:
           disk-size: 6G
           ram-size: 2048M
           disable-animations: true
-          emulator-options: -no-window -gpu off swiftshader_indirect -noaudio -no-boot-anim
+          emulator-options: -no-snapshot -no-window -gpu off -noaudio -no-boot-anim
           script: flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
       - name: Show emulator logcat
-        run: adb logcat -d | tail -n 50
+        if: always()
+        run: adb logcat -d | tail -n 100
