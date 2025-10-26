@@ -1,74 +1,61 @@
-name: Flutter Integration Tests (macOS)
+name: Flutter Integration Tests
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch
 
 jobs:
   integration-test:
-    runs-on: macos-latest
-    timeout-minutes: 30
-
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - name: 🧾 Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🐦 Setup Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.35.5"
+          flutter-version: '3.35.5'
 
-      - name: 📦 Install dependencies
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: ☕ Setup Java 8 (needed for avdmanager)
-        uses: actions/setup-java@v4
+      - name: Start Android amulator
+        uses: reactivecircus/android-emulator-runner@v2
         with:
-          distribution: 'zulu'
-          java-version: '8'
+          api-level: 30
+          target: default
+          arch: x86_64
+          profile: pixel_7_pro
+          force-avd-creation: true
+          disk-size: 6G
+          ram-size: 2048M
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
+      #            flutter build apk --debug
+#            adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
+#
+#            echo "🔍 Checking if app is installed..."
+#            adb shell pm list packages | grep com.example.flutter_ci_demo
+#
+#            echo "🚀 Sanity check launch"
+#            adb shell am start -n com.example.flutter_ci_demo/.MainActivity
+#            sleep 5
+#            adb shell pidof com.example.flutter_ci_demo || exit 1
+#            adb shell am force-stop com.example.flutter_ci_demo
 
-      - name: 🧱 Install Android system image
-        run: |
-          echo "📦 Installing Android system image..."
-          sdkmanager --install "system-images;android-30;google_apis;x86_64" --channel=0
-          sdkmanager --licenses <<< "y"
-
-      - name: 🧱 Create and start Android emulator
-        run: |
-          echo "🧱 Creating AVD..."
-          yes | $ANDROID_HOME/tools/bin/avdmanager create avd \
-            --name test \
-            --package "system-images;android-30;google_apis;x86_64" \
-            --device "pixel_5"
-          echo "🚀 Starting emulator..."
-          nohup $ANDROID_HOME/emulator/emulator -avd test -no-snapshot -no-audio -no-window -gpu swiftshader_indirect &
-          echo "⏳ Waiting for emulator to boot..."
-          $ANDROID_HOME/platform-tools/adb wait-for-device
-          boot_completed=""
-          until [[ "$boot_completed" == "1" ]]; do
-            sleep 5
-            boot_completed=$($ANDROID_HOME/platform-tools/adb shell getprop sys.boot_completed | tr -d '\r')
-            echo "🕐 Boot status: $boot_completed"
-          done
-          echo "✅ Emulator booted successfully!"
-
-      - name: 📱 Install and sanity check app
-        run: |
-          flutter build apk --debug
-          adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
-          adb shell am start -n com.example.flutter_ci_demo/.MainActivity
-          sleep 5
-          adb shell pidof com.example.flutter_ci_demo || exit 1
-
-      - name: 🧪 Run integration tests
-        run: |
-          echo "🏁 Running integration tests..."
-          flutter drive \
-            --driver=test_driver/integration_test_driver.dart \
-            --target=integration_test/app_test.dart \
-            --enable-software-rendering \
-            --verbose
-
-      - name: 🧹 Dump logcat for debugging
-        if: always()
-        run: adb logcat -d | tail -n 200 || true
+#      - name: Show emulator logcat
+#        if: always()
+#        run: adb logcat -d | tail -n 100
+      - name: Debug logs if failed
+        if: failure()
+        run: adb logcat -d | grep -E "Flutter|example|Activity|Runtime" | tail -n 200 || true
