@@ -40,19 +40,19 @@ jobs:
           ram-size: 2048M
           disable-animations: true
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: |
-            flutter build apk --debug
-            adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
-          
-            echo "🔍 Checking if app is installed..."
-            adb shell pm list packages | grep com.example.flutter_ci_demo
-          
-            echo "🚀 Sanity check launch"
-            adb shell am start -n com.example.flutter_ci_demo/.MainActivity
-            sleep 5
-            adb shell pidof com.example.flutter_ci_demo || exit 1
-            adb shell am force-stop com.example.flutter_ci_demo
-            flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
+          script: flutter test integration_test
+#            flutter build apk --debug
+#            adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
+#
+#            echo "🔍 Checking if app is installed..."
+#            adb shell pm list packages | grep com.example.flutter_ci_demo
+#
+#            echo "🚀 Sanity check launch"
+#            adb shell am start -n com.example.flutter_ci_demo/.MainActivity
+#            sleep 5
+#            adb shell pidof com.example.flutter_ci_demo || exit 1
+#            adb shell am force-stop com.example.flutter_ci_demo
+
 #      - name: Show emulator logcat
 #        if: always()
 #        run: adb logcat -d | tail -n 100
