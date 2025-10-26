@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ci_demo/main.dart' as app;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  //IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('Counter increments when tapping the button', (tester) async {
     app.main();
