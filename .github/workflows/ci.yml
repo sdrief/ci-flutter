@@ -28,6 +28,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Create AVD
+        run: |
+          echo "🧱 Creating AVD..."
+          yes | $ANDROID_HOME/tools/bin/avdmanager create avd --name test --package "system-images;android-30;default;x86_64" --device "pixel_5"
+
+
       - name: Start Android amulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
