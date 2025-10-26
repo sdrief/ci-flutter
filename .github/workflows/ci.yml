@@ -30,18 +30,18 @@ jobs:
 
       - name: Start Android amulator
         run: flutter test integration_test
-#        uses: reactivecircus/android-emulator-runner@v2
-#        with:
-#          api-level: 30
-#          target: default
-#          arch: x86_64
-#          profile: pixel_7_pro
-#          force-avd-creation: true
-#          disk-size: 6G
-#          ram-size: 2048M
-#          disable-animations: true
-#          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-#          script: flutter test integration_test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: default
+          arch: x86_64
+          profile: pixel_7_pro
+          force-avd-creation: true
+          disk-size: 6G
+          ram-size: 2048M
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: flutter test integration_test -d emulator-5554
 #            flutter build apk --debug
 #            adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
 #
