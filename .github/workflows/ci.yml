@@ -40,7 +40,30 @@ jobs:
           ram-size: 2048M
           disable-animations: true
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
+          script: |
+            echo "✅ Emulator booted"
+            
+            echo "🔍 Start logcat background logger..."
+            adb logcat -s flutter ActivityManager AndroidRuntime *:S > logcat.txt &
+
+            echo "📦 Building and installing app..."
+            flutter build apk --debug
+            adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
+
+            echo "🚀 Launching app manually to check VM Service..."
+            adb shell am start -n com.example.flutter_ci_demo/.MainActivity
+
+            echo "⏳ Wait 10s for logs..."
+            sleep 10
+            echo "📜 Dumping recent logcat output (first 50 lines):"
+            tail -n 50 logcat.txt
+
+            echo "🏁 Running integration test..."
+            flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
+
+            echo "📄 Dumping final logcat output:"
+            tail -n 100 logcat.txt
+            
 #            flutter build apk --debug
 #            adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
 #
