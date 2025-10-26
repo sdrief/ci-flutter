@@ -40,7 +40,7 @@ jobs:
           ram-size: 2048M
           disable-animations: true
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: flutter test integration_test -d emulator-5554
+          script: flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
 #            flutter build apk --debug
 #            adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
 #
