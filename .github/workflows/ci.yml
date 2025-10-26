@@ -28,6 +28,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Setup Java 8 for AVDManager
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+
       - name: Create AVD
         run: |
           echo "🧱 Creating AVD..."
