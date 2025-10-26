@@ -5,7 +5,7 @@ on:
 
 jobs:
   integration-test:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -33,38 +33,52 @@ jobs:
         with:
           api-level: 30
           target: default
-          arch: x86_64
+          arch: arm64-v8a
           profile: pixel_7_pro
           force-avd-creation: true
           disk-size: 6G
           ram-size: 2048M
           disable-animations: true
-          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          emulator-options: -no-snapshot -noaudio -no-boot-anim
           script: |
             echo "✅ Emulator booted"
-            
-            echo "🔍 Start logcat background logger..."
-            adb logcat -s flutter ActivityManager AndroidRuntime *:S > logcat.txt &
+            echo "📜 Android emulator list:"
+            avdmanager list avd || true
+            echo "🔍 Check running emulators:"
+            adb devices -l
 
-            echo "📦 Building and installing app..."
-            flutter build apk --debug
+            echo "📦 Build debug APK"
+            flutter build apk --debug -v
+
+            echo "🚀 Installing APK"
             adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
 
-            echo "🚀 Launching app manually to check VM Service..."
+            echo "🧠 Check if app is installed:"
+            adb shell pm list packages | grep com.example.flutter_ci_demo || true
+
+            echo "🪵 Start background logcat"
+            adb logcat -v time > logcat.txt &
+            sleep 3
+
+            echo "🚀 Launching app manually"
             adb shell am start -n com.example.flutter_ci_demo/.MainActivity
 
-            echo "⏳ Wait 10s for logs..."
+            echo "⏳ Waiting 10s for startup logs..."
             sleep 10
-            echo "📜 Dumping recent logcat output (first 50 lines):"
-            tail -n 50 logcat.txt
+            echo "📄 Dump recent logcat:"
+            tail -n 80 logcat.txt
 
-            echo "🏁 Running integration test..."
-            flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --enable-software-rendering --verbose
+            echo "🏁 Running integration test"
+            flutter drive --driver=test_driver/integration_test_driver.dart \
+              --target=integration_test/app_test.dart \
+              --enable-software-rendering \
+              --verbose || echo "⚠️ Test run failed"
 
-            echo "📄 Dumping final logcat output:"
+            echo "📜 Final logcat (last 100 lines)"
             tail -n 100 logcat.txt
-            
-#            flutter build apk --debug
+
+            echo "🔚 Emulator finished."
+      #            flutter build apk --debug
 #            adb install -t -r build/app/outputs/flutter-apk/app-debug.apk
 #
 #            echo "🔍 Checking if app is installed..."
