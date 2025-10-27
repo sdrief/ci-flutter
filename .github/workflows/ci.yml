@@ -31,13 +31,13 @@ jobs:
       - name: Start Android amulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
-          target: default
+          api-level: 33
+          target: google_apis
           arch: x86_64
           profile: pixel_7_pro
           force-avd-creation: true
-          disk-size: 6G
-          ram-size: 2048M
+          disk-size: 8G
+          ram-size: 4096M
           disable-animations: true
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: flutter drive --driver=test_driver/integration_test_driver.dart --target=integration_test/app_test.dart --verbose --profile
